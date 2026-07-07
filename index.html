@@ -89,6 +89,24 @@
       pointer-events:none;
     }
 
+    .mood-tint{
+      position:absolute;
+      inset:0;
+      z-index:1;
+      opacity:0;
+      mix-blend-mode:color;
+      transition:opacity .35s ease, background .35s ease;
+      pointer-events:none;
+    }
+
+    .mood-tint.show{ opacity:.85; }
+
+    .mood-tint.mood-1{ background:linear-gradient(160deg, hsl(30, 75%, 55%), hsl(20, 65%, 40%)); }
+    .mood-tint.mood-2{ background:linear-gradient(160deg, hsl(38, 40%, 45%), hsl(30, 30%, 30%)); }
+    .mood-tint.mood-3{ background:linear-gradient(160deg, hsl(208, 25%, 45%), hsl(210, 20%, 28%)); }
+    .mood-tint.mood-4{ background:linear-gradient(160deg, hsl(232, 55%, 45%), hsl(250, 45%, 25%)); }
+    .mood-tint.mood-5{ background:linear-gradient(160deg, hsl(184, 45%, 40%), hsl(190, 40%, 24%)); }
+
     .overlay{
       position:absolute;
       inset:0;
@@ -702,6 +720,7 @@
 <body>
   <div class="screen-wrap" id="game">
     <div class="background"></div>
+    <div class="mood-tint" id="moodTint"></div>
     <div class="overlay" id="overlay"></div>
 
     <div class="hud">
@@ -789,6 +808,8 @@
         description:"형제 간 갈등과 권선징악을 다룬 전래 이야기",
         question:"이 작품은 한국문학인가?",
         correct:"O",
+        mood:"mood-1",
+        moodEmoji:"📜",
         criteria:{
           lang:{ mark:"O", note:"특정 작가 없이 한국어로 향유·전승되었음" },
           subject:{ mark:"O", note:"특정 작가 없이 한민족 전체가 함께 만들고 다듬은 이야기" },
@@ -810,6 +831,8 @@
         description:"고려 시대의 삶과 사상을 담은 문집",
         question:"이 작품은 한국문학인가?",
         correct:"O",
+        mood:"mood-2",
+        moodEmoji:"🖋️",
         criteria:{
           lang:{ mark:"△", note:"한문 표기 — 한글 창제(1443) 이전이라 국어의 대체 표현 수단으로 인정" },
           subject:{ mark:"O", note:"고려인 이규보가 창작" },
@@ -830,6 +853,8 @@
         description:"산업화 과정에서 소외된 사람들의 삶을 다룬 소설",
         question:"이 작품은 한국문학인가?",
         correct:"O",
+        mood:"mood-3",
+        moodEmoji:"🏭",
         criteria:{
           lang:{ mark:"O", note:"한국어로 창작" },
           subject:{ mark:"O", note:"한국인 작가 조세희" },
@@ -850,6 +875,8 @@
         description:"재일 한국인 가족의 삶과 정체성을 다룬 소설",
         question:"이 작품은 한국문학인가?",
         correct:"X",
+        mood:"mood-4",
+        moodEmoji:"🌏",
         criteria:{
           lang:{ mark:"X", note:"영어로 창작" },
           subject:{ mark:"△", note:"한국계 혈통이지만 미국 국적으로 활동하는 작가" },
@@ -870,6 +897,8 @@
         description:"미국 사회에서 살아가는 한국계 이민자의 정체성 문제를 다룬 소설",
         question:"이 작품은 한국문학인가?",
         correct:"X",
+        mood:"mood-5",
+        moodEmoji:"🗽",
         criteria:{
           lang:{ mark:"X", note:"영어로 창작" },
           subject:{ mark:"△", note:"한국계 미국인 작가" },
@@ -1042,6 +1071,19 @@
       chapterLabel.textContent = text;
     }
 
+    const moodTintEl = document.getElementById("moodTint");
+
+    function setMood(moodClass) {
+      moodTintEl.classList.remove("show");
+      setTimeout(() => {
+        moodTintEl.className = `mood-tint show ${moodClass}`;
+      }, 220);
+    }
+
+    function clearMood() {
+      moodTintEl.classList.remove("show");
+    }
+
     function openCard(html) {
       card.innerHTML = html;
       card.classList.remove("hidden");
@@ -1063,6 +1105,7 @@
     }
 
     function renderTitleCard() {
+      clearMood();
       openCard(`
         <div class="title-card">
           <div class="card-badge">프로젝트 시작</div>
@@ -1167,9 +1210,11 @@
     }
 
     function startNextWork() {
-      setChapter(`작품 ${state.workIndex + 1} / ${works.length}`);
+      const work = works[state.workIndex];
+      setMood(work.mood);
+      setChapter(`${work.moodEmoji} 작품 ${state.workIndex + 1} / ${works.length}`);
       state.phase = "workIntro";
-      setDialogue("주인공", works[state.workIndex].intro, "검토하기 ▶");
+      setDialogue("주인공", work.intro, "검토하기 ▶");
     }
 
     function renderExplanationCard() {
@@ -1198,6 +1243,7 @@
         if (state.workIndex < works.length) {
           startNextWork();
         } else {
+          clearMood();
           state.phase = "ending";
           state.endingIndex = 0;
           setChapter("엔딩");
@@ -1224,6 +1270,7 @@
 
     function resetGame() {
       closeCard();
+      clearMood();
       state.phase = "opening";
       state.openingIndex = 0;
       state.endingIndex = 0;
